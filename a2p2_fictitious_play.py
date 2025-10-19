@@ -101,10 +101,6 @@ if __name__ == "__main__":
     # Simulation Loop
     for episode in range(args.e):
         simulator.run_episode()
-        print(f"Episode {episode + 1} completed.")
-        print(f"  Number of Beachgoers: {simulator.logger['beachgoers'][-1]}")
-        print(f"  Social Welfare: {simulator.logger['social_welfare'][-1]:.2f}")
-        print(f"  Expected Utility: {simulator.logger['exp_utility'][-1]:.2f}")
 
     # Print final results
     print(f"Simulation completed with {args.e} episodes.")
@@ -114,10 +110,10 @@ if __name__ == "__main__":
     plt.plot(simulator.logger['beachgoers'], label='Number of Beachgoers', color='blue')
     plt.plot(simulator.logger['social_welfare'], label='Social Welfare', color='green')
     plt.plot(simulator.logger['exp_utility'], label='Expected Utility [%]', color='red')
-    plt.ylim(0, n)
+    plt.ylim(0, args.n)
     plt.xlabel('Episode')
-    plt.title('Beachgoers Over Episodes (N={}, C={}, K={})'.format(n, c, k))
+    plt.title('Beachgoers Over Episodes (N={}, C={}, K={})'.format(args.n, args.c, args.k))
     plt.legend()
     plt.grid()
-    print("Displaying plot in a window...")
+    print("Plotting simulation results...")
     plt.show()
