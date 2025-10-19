@@ -38,9 +38,10 @@ class Memory:
 
 
 class Simulator:
-    def __init__(self, n: int, c: int, k: int):
+    def __init__(self, n: int, c: int, k: int, choice: str):
         self.n = n  # Number of agents
         self.c = c  # Beach capacity
+        self.stochastic = (choice == 'stochastic')
 
         self.memory = Memory(limit=k, action_size=n)
         self.logger = {'beachgoers': [], 'social_welfare': [], 'exp_utility': []}
@@ -68,8 +69,10 @@ class Simulator:
             self.logger['exp_utility'].append(exp_utility.mean() * 100)
 
             # Choose actions based on expected utility
-            # actions = exp_utility > 0.5  # Deterministic choice
-            actions = np.random.rand(self.n) < (exp_utility / (exp_utility + 0.5))  # Stochastic choice
+            if self.stochastic:
+                actions = np.random.rand(self.n) < (exp_utility / (exp_utility + 0.5))  # Stochastic choice
+            else:
+                actions = exp_utility > 0.5  # Deterministic choice
 
         # Calculate utility for each agent
         x = actions.sum()  # Total number of agents going to the beach
@@ -85,15 +88,15 @@ if __name__ == "__main__":
 
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Beachgoers Optimization")
+    parser.add_argument('--choice', type=str, choices=['deterministic', 'stochastic'], default='stochastic', help="Strategy for agents choosing actions (default: stochastic)")
     parser.add_argument('--n', type=int, default=100, help="Number of agents in the simulation (default: 100)")
     parser.add_argument('--c', type=int, default=20, help="Optimal capacity of the beach (default: 20)")
     parser.add_argument('--k', type=int, default=10, help="Maximum number of experiences for replay (default: 10)")
     parser.add_argument('--e', type=int, default=50, help="Number of episodes to simulate (default: 50)")
     args = parser.parse_args()
-    n, c, k = args.n, args.c, args.k
 
     # Configure Simulation environment
-    simulator = Simulator(n=n, c=c, k=k)
+    simulator = Simulator(n=args.n, c=args.c, k=args.k, choice=args.choice)
 
     # Simulation Loop
     for episode in range(args.e):
