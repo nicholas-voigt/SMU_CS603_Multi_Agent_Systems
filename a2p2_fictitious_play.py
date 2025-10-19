@@ -65,7 +65,7 @@ class Simulator:
             past_crowd = actions_excl_self.sum(axis=2).mean(axis=0)  # Shape (n,)
 
             # Calculate expected utility for going to the beach based on the average past crowd (and myself)
-            exp_utility = np.minimum(1.0, c / (past_crowd + 1))
+            exp_utility = np.minimum(1.0, self.c / (past_crowd + 1))
             self.logger['exp_utility'].append(exp_utility.mean() * 100)
 
             # Choose actions based on expected utility
