@@ -51,26 +51,33 @@ class Simulator:
     def __init__(self, n: int, c: int, epsilon: float, epsilon_decay: float, state_init: str):
         """
         Initialize the Simulator for beachgoers optimization. Implements epsilon-greedy reinforcement learning with 3 states and 2 actions.
-        States: 0 (0 - c beachgoers), 1 (c+1 - equilibrium beachgoers), 2 (> equilibrium beachgoers)
+        States: 0 (0 -> c beachgoers), 1 (c+1 -> equilibrium beachgoers), 2 (> equilibrium beachgoers)
         Actions: 0 (stay home), 1 (go to beach)
         Args:
             n: int - number of agents
             c: int - optimal capacity of the beach
             epsilon: float - initial exploration rate for epsilon-greedy strategy
             epsilon_decay: float - decay rate for exploration
+            state_init: str - type of state initialization for Q-table ('zeros', 'random', 'optimistic')
         """
-        self.n = n  # Number of agents
-        self.c = c  # Beach capacity
-        self.epsilon = epsilon  # Exploration rate for epsilon-greedy
-        self.epsilon_decay = epsilon_decay  # Decay rate for exploration
+        self.n = n
+        self.c = c
+        self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
 
         self.equilibrium = int(c * 2)  # Equilibrium point (utility is equal for going to beach or staying home)
-        self.state = int(0)  # Previous state (depending on the number of beachgoers, 0 in first episode)
+        self.state = int(0)  # State (depending on the number of beachgoers, 0 in first episode)
         self.memory = Memory(n=n, states=3, actions=2, init_type=state_init)
         self.logger = {'beachgoers': [], 'social_welfare': [], 'epsilon': []}
 
     def get_state(self, num_beachgoers: int) -> int:
-        # Determine state based on number of beachgoers
+        """
+        Get the state based on the number of beachgoers.
+        Args:
+            num_beachgoers: int - number of agents that went to the beach
+        Returns:
+            state: int - resulting state (0, 1, or 2)
+        """
         if num_beachgoers <= self.c:
             return 0
         elif num_beachgoers <= self.equilibrium:
@@ -79,7 +86,9 @@ class Simulator:
             return 2
 
     def run_simulation(self, episodes: int):
-        # Simulation Loop
+        """
+        Run the simulation for a specified number of episodes.
+        """
         for _ in range(episodes):
             self.logger['epsilon'].append(self.epsilon * 100)
             self.run_episode()
@@ -87,6 +96,9 @@ class Simulator:
             self.epsilon *= self.epsilon_decay
 
     def run_episode(self):
+        """
+        Run a single episode of the simulation.
+        """
         # Evaluate if exploration or exploitation for each agent individually
         exploration_mask = np.random.rand(self.n) < self.epsilon
         actions = np.zeros(self.n, dtype=int)
@@ -139,11 +151,17 @@ if __name__ == "__main__":
     print("Average Q-Table Values:")
     print(simulator.memory.q_table.mean(axis=0))
 
+    # Calculate optimum for reference
+    x = np.arange(1, args.n + 1)
+    optimum = np.max(x * np.minimum(1.0, args.c / x) + (args.n - x) * 0.5)
+
     # Plotting the results
     plt.figure(figsize=(12, 6))
     plt.plot(simulator.logger['beachgoers'], label='Number of Beachgoers', color='blue')
     plt.plot(simulator.logger['social_welfare'], label='Social Welfare', color='green')
     plt.plot(simulator.logger['epsilon'], label='Epsilon [%]', color='red')
+    plt.axhline(y=simulator.equilibrium, color='orange', linestyle='--', label=f'Equilibrium (={simulator.equilibrium})')
+    plt.axhline(y=optimum, color='purple', linestyle='--', label=f'Social Optimum (={int(optimum)})')
     plt.ylim(0, args.n)
     plt.xlabel('Episode')
     plt.title('Beachgoers Over Episodes (N={}, C={}, Init-E={}, E-Decay={})'.format(args.n, args.c, args.epsilon, args.epsilon_decay))
