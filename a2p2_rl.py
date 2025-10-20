@@ -13,23 +13,30 @@ class Memory:
             actions: int - number of actions
             init_type: str - type of initialization ('zeros', 'random', 'optimistic')
         """
+        self.update_counts = np.zeros((n, states, actions), dtype=int)
         if init_type == 'zeros':
             self.q_table = np.zeros((n, states, actions), dtype=float)
         elif init_type == 'random':
             self.q_table = np.random.rand(n, states, actions)
         elif init_type == 'optimistic':
-            self.q_table = np.ones((n, states, actions), dtype=float) * 5  # optimistic initial values
+            self.q_table = np.ones((n, states, actions), dtype=float) * 5
         else:
             raise ValueError("Invalid initialization type. Choose from 'zeros', 'random', or 'optimistic'.")
 
-    def update(self, experience: np.ndarray, episode: int):
+    def update(self, state: int, actions: np.ndarray, rewards: np.ndarray):
         """
-        Update the Q-table with a new experience.
+        Update the Q-table for the specific state-action pairs experienced.
         Args:
-            experience: np.ndarray - array of shape (n, states, actions) containing the experience for each agent
-            episode: int - the current episode number
+            state: int - The state that was observed by all agents.
+            actions: np.ndarray - The action taken by each agent. Shape (n,).
+            rewards: np.ndarray - The reward received by each agent for their action. Shape (n,).
         """
-        self.q_table = self.q_table + (1 / (episode + 1)) * (experience - self.q_table)
+        agent_indices = np.arange(self.q_table.shape[0])
+        # Track the number of updates for each agent-action-state triplet
+        self.update_counts[agent_indices, state, actions] += 1
+        # Update Q-values using incremental mean formula
+        current_q_values = self.q_table[agent_indices, state, actions]
+        self.q_table[agent_indices, state, actions] = current_q_values + (1 / self.update_counts[agent_indices, state, actions]) * (rewards - current_q_values)
 
     def retrieve(self) -> np.ndarray:
         """
@@ -58,7 +65,7 @@ class Simulator:
         self.epsilon_decay = epsilon_decay  # Decay rate for exploration
 
         self.equilibrium = int(c * 2)  # Equilibrium point (utility is equal for going to beach or staying home)
-        self.previous_state = int(0)  # Previous state (depending on the number of beachgoers, 0 in first episode)
+        self.state = int(0)  # Previous state (depending on the number of beachgoers, 0 in first episode)
         self.memory = Memory(n=n, states=3, actions=2, init_type=state_init)
         self.logger = {'beachgoers': [], 'social_welfare': [], 'epsilon': []}
 
@@ -73,33 +80,33 @@ class Simulator:
 
     def run_simulation(self, episodes: int):
         # Simulation Loop
-        for episode in range(episodes):
+        for _ in range(episodes):
             self.logger['epsilon'].append(self.epsilon * 100)
-            self.run_episode(episode)
+            self.run_episode()
             # Decay exploration rate
             self.epsilon *= self.epsilon_decay
 
-    def run_episode(self, episode: int):
+    def run_episode(self):
         # Evaluate if exploration or exploitation for each agent individually
-        exploration_mask = (np.random.rand(self.n) < self.epsilon)
+        exploration_mask = np.random.rand(self.n) < self.epsilon
+        actions = np.zeros(self.n, dtype=int)
 
         # Choose random actions based on exploration mask
-        actions = np.zeros(self.n, dtype=int)
         actions[exploration_mask] = np.random.randint(0, 2, size=exploration_mask.sum(), dtype=int)
 
-        # For agents not exploring, use the Q-table to choose actions
-        actions[~exploration_mask] = np.argmax(self.memory.q_table[~exploration_mask, self.previous_state, :], axis=1)
+        # For agents not exploring, use the Q-table entry of the previous state to choose actions
+        actions[~exploration_mask] = np.argmax(self.memory.q_table[~exploration_mask, self.state, :], axis=1)
 
-        # Calculate current state based on number of beachgoers
+        # Observe outcome and calculate rewards
         num_beachgoers = actions.sum()
         beach_utility = np.minimum(1.0, self.c / (num_beachgoers + 1e-8))
-        self.previous_state = self.get_state(num_beachgoers)
+        rewards = np.where(actions == 1, beach_utility, 0.5)
 
-        # Update Q-table in memory
-        experience = np.zeros((self.n, 3, 2), dtype=float)
-        experience[:, self.previous_state, 0] = 0.5 
-        experience[:, self.previous_state, 1] = beach_utility
-        self.memory.update(experience, episode)
+        # Update Q-table
+        self.memory.update(self.state, actions, rewards)
+
+        # Update state based on new number of beachgoers
+        self.state = self.get_state(num_beachgoers)
 
         # Log metrics
         self.logger['beachgoers'].append(num_beachgoers)
@@ -126,7 +133,7 @@ if __name__ == "__main__":
 
     # Print final results
     print(f"Simulation completed with {args.e} episodes.")
-    print(f"Total simulation time: {end_time - start_time:.2f} seconds")
+    print(f"Total simulation time: {end_time - start_time:.4f} seconds")
 
     # Print average Q-Table values
     print("Average Q-Table Values:")
@@ -139,7 +146,7 @@ if __name__ == "__main__":
     plt.plot(simulator.logger['epsilon'], label='Epsilon [%]', color='red')
     plt.ylim(0, args.n)
     plt.xlabel('Episode')
-    plt.title('Beachgoers Over Episodes (N={}, C={})'.format(args.n, args.c))
+    plt.title('Beachgoers Over Episodes (N={}, C={}, Init-E={}, E-Decay={})'.format(args.n, args.c, args.epsilon, args.epsilon_decay))
     plt.legend()
     plt.grid()
     print("Plotting simulation results...")
