@@ -153,15 +153,16 @@ if __name__ == "__main__":
 
     # Calculate optimum for reference
     x = np.arange(1, args.n + 1)
-    optimum = np.max(x * np.minimum(1.0, args.c / x) + (args.n - x) * 0.5)
+    social_optimum = np.max(x * np.minimum(1.0, args.c / x) + (args.n - x) * 0.5)
+    social_equilibrium = simulator.equilibrium * np.minimum(1.0, args.c / simulator.equilibrium) + (args.n - simulator.equilibrium) * 0.5
 
     # Plotting the results
     plt.figure(figsize=(12, 6))
     plt.plot(simulator.logger['beachgoers'], label='Number of Beachgoers', color='blue')
     plt.plot(simulator.logger['social_welfare'], label='Social Welfare', color='green')
     plt.plot(simulator.logger['epsilon'], label='Epsilon [%]', color='red')
-    plt.axhline(y=simulator.equilibrium, color='orange', linestyle='--', label=f'Equilibrium (={simulator.equilibrium})')
-    plt.axhline(y=optimum, color='purple', linestyle='--', label=f'Social Optimum (={int(optimum)})')
+    plt.axhline(y=social_equilibrium, color='orange', linestyle='--', label=f'Social Equilibrium (={int(social_equilibrium)})')
+    plt.axhline(y=social_optimum, color='purple', linestyle='--', label=f'Social Optimum (={int(social_optimum)})')
     plt.ylim(0, args.n)
     plt.xlabel('Episode')
     plt.title('Beachgoers Over Episodes (N={}, C={}, Init-E={}, E-Decay={})'.format(args.n, args.c, args.epsilon, args.epsilon_decay))

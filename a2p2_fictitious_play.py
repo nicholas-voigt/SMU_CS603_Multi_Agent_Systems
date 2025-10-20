@@ -109,6 +109,8 @@ if __name__ == "__main__":
     plt.figure(figsize=(12, 6))
     plt.plot(simulator.logger['beachgoers'], label='Number of Beachgoers', color='blue')
     plt.plot(simulator.logger['social_welfare'], label='Social Welfare', color='green')
+    avg_social_welfare = np.mean(simulator.logger['social_welfare'], dtype=float)
+    plt.axhline(y=avg_social_welfare, color='green', linestyle='--', label=f'Average Social Welfare (={avg_social_welfare:.2f})')
     plt.plot(simulator.logger['exp_utility'], label='Expected Utility [%]', color='red')
     plt.ylim(0, args.n)
     plt.xlabel('Episode')
