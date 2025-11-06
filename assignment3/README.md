@@ -1,12 +1,29 @@
-PyGame Setup:
+Setup:
 
-Agent class:
-    - Searching State -> randomly running around to find the next task
-    - Calling Help State -> If task was found, but there are not enough agents to do it. Emitted call for help and waits for response (maybe needs a kill time or a way to retract the call and join other calls)
-    - Helping State -> Heard a help call from another agent and is moving in to help
-    - Working State -> Working on solving the current task
+Using MESA Framework to create agent model
+
+Agent class (mesa.Agent class):
+    - Attributes:
+        - unique id
+        - model (reference to the STA model)
+        - position
+        - speed
+        - communication range
+        - protocol (which logic to follow)
+        - active state (See below)
+    - State Machine:
+        Each state implements the respective logic and agent behaviour.
+        - Searching State:
+            Standard state, movement according to some logic (e.g. random) in search for tasks
+        - Waiting for Help State:
+            Agent has called for help and waits for it to arrive
+        - Helping State:
+            On the way to the agent who has been calling for help
+        - Working State:
+            Solving the given task
 
 Task class:
+    not a mesa object, simple implementation without actions, just to keep track of task states
     - Idle State -> after spawn, is existing somewhere and nothing happening
     - InProgress State -> Task is assigned and being worked on
     - Completed State -> Task is done and gets removed from the game
