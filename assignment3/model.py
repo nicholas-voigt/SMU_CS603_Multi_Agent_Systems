@@ -35,7 +35,7 @@ class STAModel(mesa.Model):
 
         # Initialize agents and tasks
         WorkerAgent.create_agents(self, num_workers, speed=worker_speed, call_range=worker_comm_range, action_range=task_action_range, response_timeout=worker_timeout)
-        TaskAgent.create_agents(self, num_tasks, workers_required=task_workers, time_required=task_time)
+        TaskAgent.create_agents(self, num_tasks, action_range=task_action_range, workers_required=task_workers, time_required=task_time)
 
         # Keep track of agent types for step execution
         print("Model initialized")
