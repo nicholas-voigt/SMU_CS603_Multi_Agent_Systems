@@ -39,28 +39,28 @@ def agent_portrayal(agent):
 
 # Create initial model instance
 sta_model = STAModel(
-    seed=1234,
-    num_agents=1,
+    seed=None,
+    num_workers=1,
     num_tasks=1,
     protocol='random',
-    agent_speed=25,
-    agent_call_range=50,
-    agent_response_timeout=1,
-    task_work_range=50,
+    worker_speed=25,
+    worker_comm_range=50,
+    worker_timeout=1,
+    task_action_range=50,
     task_workers=1,
     task_time=2
 )
 
 # Model Parameters for interactive testing
 model_params = {
-    "seed": 1234,
-    "num_agents": Slider("Number of Agents", min=1, max=50, step=1, value=1, dtype=int),
+    "seed": None,
+    "num_workers": Slider("Number of Workers", min=1, max=50, step=1, value=1, dtype=int),
     "num_tasks": Slider("Number of Tasks", min=1, max=50, step=1, value=1, dtype=int),
     "protocol": "random",
-    "agent_speed": Slider("Agent Speed", min=5, max=50, step=5, value=25, dtype=int),
-    "agent_call_range": 50,
-    "agent_response_timeout": 1,
-    "task_work_range": 50,
+    "worker_speed": Slider("Worker Speed", min=5, max=50, step=5, value=25, dtype=int),
+    "worker_comm_range": 50,
+    "worker_timeout": 1,
+    "task_action_range": 50,
     "task_workers": Slider("Task Workers", min=1, max=10, step=1, value=1, dtype=int),
     "task_time": 2,
 }
