@@ -46,6 +46,7 @@ sta_model = STAModel(
     worker_speed=25,
     worker_comm_range=50,
     worker_timeout=1,
+    worker_break_time=0,
     task_action_range=50,
     task_workers=1,
     task_time=2
@@ -58,11 +59,12 @@ model_params = {
     "num_tasks": Slider("Number of Tasks", min=1, max=50, step=1, value=1, dtype=int),
     "protocol": "random",
     "worker_speed": Slider("Worker Speed", min=5, max=50, step=5, value=25, dtype=int),
-    "worker_comm_range": 50,
-    "worker_timeout": 1,
+    "worker_comm_range": Slider("Worker Communication Range", min=100, max=1000, step=100, value=100, dtype=int),
+    "worker_timeout": 60,
+    "worker_break_time": Slider("Worker Break Time", min=0, max=60, step=5, value=0, dtype=int),
     "task_action_range": 50,
     "task_workers": Slider("Task Workers", min=1, max=10, step=1, value=1, dtype=int),
-    "task_time": 2,
+    "task_time": 3,
 }
 
 # Visualization Grid

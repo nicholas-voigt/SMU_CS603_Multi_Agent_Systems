@@ -4,7 +4,7 @@ from agents import WorkerAgent, TaskAgent
 
 class STAModel(mesa.Model):
     def __init__(self, seed: float | None, num_workers: int, num_tasks: int, protocol: str,
-                 worker_speed: int, worker_comm_range: int, worker_timeout: int, 
+                 worker_speed: int, worker_comm_range: int, worker_timeout: int, worker_break_time: int,
                  task_action_range: int, task_workers: int, task_time: int) -> None:
         """
         Model class for the multi-agent system simulation.
@@ -16,6 +16,7 @@ class STAModel(mesa.Model):
             worker_speed (int): Speed of the workers.
             worker_comm_range (int): Call range of the workers to communicate.
             worker_timeout (int): Response timeout of the workers.
+            worker_break_time (int): Break time of the workers after releasing a task.
             task_action_range (int): Work range of the tasks.
             task_workers (int): Number of workers required per task.
             task_time (int): Time required to complete each task.
@@ -28,20 +29,15 @@ class STAModel(mesa.Model):
         self.speed = worker_speed
         self.comm_range = worker_comm_range
         self.worker_timeout = worker_timeout
+        self.worker_break_time = worker_break_time
         self.action_range = task_action_range
 
         # Initialize space
         self.space = mesa.space.ContinuousSpace(x_max=1000, y_max=1000, torus=False)
 
         # Initialize agents and tasks
-        WorkerAgent.create_agents(self, num_workers, speed=worker_speed, call_range=worker_comm_range, action_range=task_action_range, response_timeout=worker_timeout)
+        WorkerAgent.create_agents(self, num_workers, speed=worker_speed, call_range=worker_comm_range, action_range=task_action_range, response_timeout=worker_timeout, break_time=worker_break_time)
         TaskAgent.create_agents(self, num_tasks, action_range=task_action_range, workers_required=task_workers, time_required=task_time)
-
-        # Keep track of agent types for step execution
-        print("Model initialized")
-        for agent_class in self.agent_types:
-            count = len(self.agents_by_type[agent_class])
-            print(f" - {agent_class.__name__}: {count} agents")
 
         # Data Collection
         self.datacollector = mesa.DataCollector(

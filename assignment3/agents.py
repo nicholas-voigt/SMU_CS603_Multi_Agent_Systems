@@ -10,7 +10,7 @@ class WorkerAgent(mesa.Agent):
     """
     The WorkerAgent that moves and performs tasks.
     """
-    def __init__(self, model: mesa.Model, speed: int, call_range: int, action_range: int, response_timeout: int):
+    def __init__(self, model: mesa.Model, speed: int, call_range: int, action_range: int, response_timeout: int, break_time: int):
         """
         Args:
             model (mesa.Model): The model instance the agent belongs to.
@@ -24,6 +24,7 @@ class WorkerAgent(mesa.Agent):
         self.call_range = call_range
         self.action_range = action_range
         self.response_timeout = response_timeout
+        self.break_time = break_time
         self.active_state = WorkerSearching()
 
         # Place agent at random position in space
@@ -82,9 +83,9 @@ class State:
 
 # --- STATE CLASSES FOR WORKER ---
 class WorkerSearching(State):
-    """
-    The state for a worker randomly walking around and searching for tasks.
-    """
+    def __init__(self, break_time: int = 0):
+        self.break_time = break_time
+
     def execute(self, agent):
         # --- Task Search Logic ---
         neighbors = agent.model.space.get_neighbors(
@@ -94,7 +95,7 @@ class WorkerSearching(State):
         )
         tasks = list(filter(lambda a: isinstance(a, TaskAgent) and a.active_state.name == "TaskIdle", neighbors))
 
-        if len(tasks) == 0:
+        if len(tasks) == 0 or self.break_time > 0:
             # --- Random Walk Logic ---
             # Agent picks a random direction and speed within speed limit
             angle = agent.random.uniform(0, 2 * np.pi)
@@ -105,6 +106,8 @@ class WorkerSearching(State):
             new_x = max(0, min(agent.model.space.x_max - 1, new_x))
             new_y = max(0, min(agent.model.space.y_max - 1, new_y))
             agent.model.space.move_agent(agent, (new_x, new_y))
+            # Decrease break time if on break
+            self.break_time = max(0, self.break_time - 1)
 
         else:
             task = min(tasks, key=lambda t: agent.model.space.get_distance(agent.pos, t.pos))
@@ -138,7 +141,7 @@ class WorkerWaiting(State):
 
         # Check if timer has expired
         elif self.timer == 0:
-            agent.change_state(WorkerSearching())
+            agent.change_state(WorkerSearching(agent.break_time))
         else:
             self.timer -= 1
 
@@ -159,7 +162,7 @@ class WorkerResponding(State):
 
         # Check timer expiry
         elif self.timer == 0:
-            agent.change_state(WorkerSearching())
+            agent.change_state(WorkerSearching(agent.break_time))
 
         # Move towards target and decrement timer
         else:
