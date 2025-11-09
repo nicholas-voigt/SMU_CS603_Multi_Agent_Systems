@@ -3,7 +3,7 @@ from agents import WorkerAgent, TaskAgent
 
 
 class STAModel(mesa.Model):
-    def __init__(self, seed: float | None, num_workers: int, num_tasks: int, protocol: str,
+    def __init__(self, seed: float | None, num_workers: int, num_tasks: int, use_call_off: bool,
                  worker_speed: int, worker_comm_range: int, worker_timeout: int, worker_break_time: int,
                  task_action_range: int, task_workers: int, task_time: int) -> None:
         """
@@ -12,7 +12,7 @@ class STAModel(mesa.Model):
             seed (float | None): Seed for random number generator.
             num_agents (int): Number of agents in the simulation.
             num_tasks (int): Number of tasks in the simulation.
-            protocol (str): Protocol used by agents (e.g., 'random', 'call_out', 'call_off').
+            use_call_off (bool): Whether to use call-off protocol (if false, uses call-out without freeing of workers).
             worker_speed (int): Speed of the workers.
             worker_comm_range (int): Call range of the workers to communicate.
             worker_timeout (int): Response timeout of the workers.
@@ -36,7 +36,7 @@ class STAModel(mesa.Model):
         self.space = mesa.space.ContinuousSpace(x_max=1000, y_max=1000, torus=False)
 
         # Initialize agents and tasks
-        WorkerAgent.create_agents(self, num_workers, speed=worker_speed, call_range=worker_comm_range, action_range=task_action_range, response_timeout=worker_timeout, break_time=worker_break_time)
+        WorkerAgent.create_agents(self, num_workers, call_off=use_call_off, speed=worker_speed, call_range=worker_comm_range, action_range=task_action_range, response_timeout=worker_timeout, break_time=worker_break_time)
         TaskAgent.create_agents(self, num_tasks, action_range=task_action_range, workers_required=task_workers, time_required=task_time)
 
         # Data Collection

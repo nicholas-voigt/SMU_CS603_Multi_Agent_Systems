@@ -10,16 +10,18 @@ class WorkerAgent(mesa.Agent):
     """
     The WorkerAgent that moves and performs tasks.
     """
-    def __init__(self, model: mesa.Model, speed: int, call_range: int, action_range: int, response_timeout: int, break_time: int):
+    def __init__(self, model: mesa.Model, call_off: bool, speed: int, call_range: int, action_range: int, response_timeout: int, break_time: int):
         """
         Args:
             model (mesa.Model): The model instance the agent belongs to.
+            call_off (bool): Whether the agent uses call-off protocol.
             speed (int): Movement speed of the agent.
             call_range (int): Communication range for calls/auctions.
             action_range (int): Action range for performing tasks.
             response_timeout (int): Maximum time to respond to calls/auctions.
         """
         super().__init__(model)
+        self.call_off = call_off
         self.speed = speed
         self.call_range = call_range
         self.action_range = action_range
@@ -118,8 +120,9 @@ class WorkerSearching(State):
                     radius=agent.call_range,
                     include_center=False
                 )
-                workers = filter(lambda a: isinstance(a, WorkerAgent) and a != agent and a.active_state.name == "WorkerSearching", neighbors)
-                for worker in workers:
+                workers = list(filter(lambda a: isinstance(a, WorkerAgent) and a != agent and a.active_state.name == "WorkerSearching", neighbors))
+                workers.sort(key=lambda w: agent.model.space.get_distance(agent.pos, w.pos))
+                for worker in workers[:task.workers_required - 1]:
                     worker.change_state(WorkerResponding(task, worker.response_timeout))
 
             # Set worker into waiting for execution state
@@ -134,7 +137,7 @@ class WorkerWaiting(State):
     def execute(self, agent):
         # Check Task Status
         if self.task.active_state.name == "TaskExecuting":
-            if agent in self.task.active_state.workers:
+            if not agent.call_off or agent in self.task.active_state.workers:
                 agent.change_state(WorkerWorking(self.task))
             else:
                 agent.change_state(WorkerSearching())
@@ -196,6 +199,7 @@ class TaskIdle(State):
             include_center=False
         )
         workers = list(filter(lambda a: isinstance(a, WorkerAgent) and a.active_state.name == "WorkerWaiting" and a.active_state.task == agent, neighbors)) # type: ignore
+        workers.sort(key=lambda w: agent.model.space.get_distance(agent.pos, w.pos))
         if len(workers) >= agent.workers_required:
             agent.change_state(TaskExecuting(workers[:agent.workers_required], agent.time_required))
 
