@@ -9,7 +9,7 @@ params = {
     "seed": None,
     "num_workers": [30],
     "num_tasks": [2],
-    "use_call_off": [False, True],
+    "use_call_off": [True],
     "worker_speed": [25],
     "worker_comm_range": [0, 100, 200, 300, 400, 600, 1000, 1400],
     "worker_timeout": [60],
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     # Save results to file
     folder = "logs"
-    results_file = "call_off_protocol.csv"
+    results_file = "game_model_auction.csv"
     absolute_path = os.path.dirname(__file__)
     folder = os.path.join(absolute_path, folder)
     os.makedirs(folder, exist_ok=True)
